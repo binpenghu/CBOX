@@ -1949,6 +1949,18 @@
       <name>$PROJ_DIR$\App\bsp.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\App\Display.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\Display.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\key.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\key.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\App\main.c</name>
     </file>
     <file>
@@ -2091,6 +2103,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\test\led.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\test\test.c</name>
     </file>
   </group>
 </project>

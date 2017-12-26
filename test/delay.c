@@ -4,34 +4,29 @@
 
 #include"delay.h"
 
-/***********************
-函数功能：us延时
-输入参数：无
-输出参数：无
-备    注：粗略延时 1us
-***********************/
-void delay_us(void)
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   us / 16mhz
+ *******************************************************************************/
+void delay_us(u16 count)
 { 
-    asm("nop"); //一个asm("nop")函数经过示波器测试代表125ns
-    asm("nop");
-    asm("nop");
-    asm("nop"); 
-    asm("nop");
-    asm("nop"); 
-    asm("nop");
-    asm("nop"); 	
+	while(--count)
+	{
+		nop();nop();nop();nop();
+		nop();nop();nop();nop();
+	}
 }
 
-/***********************
-函数功能：ms延时
-输入参数：无
-输出参数：无
-备    注：粗略延时1ms
-***********************/
-void delay_ms(unsigned int time)
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   ms / 16mhz
+ *******************************************************************************/
+void delay_ms(u16 time)
 {
-    unsigned int i;
     while(time--)  
-    for(i=500;i>0;i--)
-    delay_us(); 
+    	delay_us(1000); 
 }
