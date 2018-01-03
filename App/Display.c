@@ -29,7 +29,7 @@
 //****************************************************************************
 // @Defines
 //****************************************************************************
-
+#define DIGITAL_POINT 0x80
 //****************************************************************************
 // @Typedefs
 //****************************************************************************
@@ -38,6 +38,7 @@
 // @Imported Global Variables
 //****************************************************************************
 static u8 Number[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f}; //0-9
+
 typedef enum
 {
 	DECADE_REG = 0x68,
@@ -105,12 +106,14 @@ void dispaly_num(u16 num )
 		decade=Number[0];
 		digit = Number[num/10];
 		point = Number[num%10];
+		digit |= DIGITAL_POINT;
 	}
 	else if (num<1000)
 	{
 		decade = Number[num/100];
 		digit = Number[(num%100)/10];
-		point = Number[(num%100)%10];		
+		point = Number[(num%100)%10];	
+		digit |= DIGITAL_POINT;
 	}
 
 	TM1650_Set(DECADE_REG,decade);		
@@ -131,16 +134,28 @@ void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off)
 	static u8 ledVal = 0;
 	u8 temp=0;
 	if (ledCmd >= MAX_LED_CMD)
+	{
 		return;
-	if (on_off == ON)
+	}
+	else if (ledCmd <LED_ALL_CLOSED_CMD)
 	{
-		ledVal |= 0x1<<ledCmd;
-		ledVal |= ledCmd;
-	}else if (on_off == OFF)
+		if (on_off == ON)
+		{
+			ledVal |= 0x1<<ledCmd;
+			ledVal |= ledCmd;
+		}else if (on_off == OFF)
+		{
+			temp = ~(0x1<<ledCmd);
+			ledVal &= temp;
+		}	
+
+	}else if (ledCmd == LED_ALL_CLOSED_CMD)
 	{
-		temp = ~(0x1<<ledCmd);
-		ledVal &= temp;
-	}	
+		if (on_off == ON)
+			ledVal = 0xff;
+		else
+			ledVal = 0x0;
+	}
 	TM1650_Set(OTHER_LED_REG,ledVal);	
 	regValBackup.led_regval = ledVal;
 }

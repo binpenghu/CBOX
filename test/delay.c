@@ -12,10 +12,10 @@
  *******************************************************************************/
 void delay_us(u16 count)
 { 
-	while(--count)
+    u16 temp = count;
+	while(--temp)
 	{
-		nop();nop();nop();nop();
-		nop();nop();nop();nop();
+		nop();nop();nop();nop();nop();nop();nop();nop();
 	}
 }
 
@@ -27,6 +27,9 @@ void delay_us(u16 count)
  *******************************************************************************/
 void delay_ms(u16 time)
 {
-    while(time--)  
+    u16 temp = time;
+    while(temp--)  
+    {
     	delay_us(1000); 
+    }
 }

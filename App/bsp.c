@@ -48,7 +48,7 @@
 //****************************************************************************
 // @Prototypes Of Static Functions
 //****************************************************************************
-
+static void adc_init(void);
 //****************************************************************************
 // @Prototypes Of Global Functions
 //****************************************************************************
@@ -96,12 +96,13 @@ void sysInit(void)
   GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_FL_NO_IT);
   GPIO_Init(GPIOD, GPIO_PIN_3, GPIO_MODE_IN_FL_NO_IT);
     //复用外设配置
-  ADC1_DeInit();
+  //ADC1_DeInit();
   //ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_2, ADC1_PRESSEL_FCPU_D2, ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT, ADC1_SCHMITTTRIG_CHANNEL0, DISABLE);
   //ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_3, ADC1_PRESSEL_FCPU_D2, ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT, ADC1_SCHMITTTRIG_CHANNEL0, DISABLE);
   //ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_4, ADC1_PRESSEL_FCPU_D2, ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT, ADC1_SCHMITTTRIG_CHANNEL0, DISABLE);
   //ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_5, ADC1_PRESSEL_FCPU_D2, ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT, ADC1_SCHMITTTRIG_CHANNEL0, DISABLE);
-  ADC1_Cmd(ENABLE);
+  //ADC1_Cmd(ENABLE);
+  adc_init();
 
 }
 
@@ -113,11 +114,15 @@ void sysInit(void)
  *******************************************************************************/
 KEY_STATUS_E getKeySwSta(void)
 {
-	 BitStatus bit_status;
-	 bit_status = GPIO_ReadInputPin(GPIOA, GPIO_PIN_3);
-	 if (bit_status == SET)  //SET or RESET
+	 //BitStatus bit_status;
+	 u8 temp = 0;
+	 //bit_status = GPIO_ReadInputPin(GPIOA, GPIO_PIN_3);
+	 //temp = bit_status & GPIO_PIN_3;
+	 temp = GPIOA->IDR & GPIO_PIN_3;
+	 if (temp  != RESET)  //SET or RESET
 	 {
 		return KEY_RELEASE;
+		
 	 }else
 	 {
 		return KEY_PRESS;
@@ -132,9 +137,13 @@ KEY_STATUS_E getKeySwSta(void)
 	
 BAT_CONNECT_DIR_STA_E getBatConnectSta(void)
 {
-	BitStatus bit_status;
-	bit_status = GPIO_ReadInputPin(GPIOC, GPIO_PIN_5);
-	if (bit_status == SET)	//SET or RESET
+	//BitStatus bit_status;
+	u8 temp = 0;
+	//bit_status = GPIO_ReadInputPin(GPIOC, GPIO_PIN_5);
+	//temp = bit_status & GPIO_PIN_5;
+	temp = GPIOC->IDR & GPIO_PIN_5;
+	//if (bit_status != RESET)	//SET or RESET
+	if (temp != RESET)
 	{
 	   return BAT_NORMAL;
 	}else
@@ -151,9 +160,13 @@ BAT_CONNECT_DIR_STA_E getBatConnectSta(void)
  *******************************************************************************/
 D24V_CONNECT_STA_E getD24Sta(void)
 {
-	BitStatus bit_status;
-	bit_status = GPIO_ReadInputPin(GPIOC, GPIO_PIN_6);
-	if (bit_status == SET)	//SET or RESET
+	//BitStatus bit_status;
+	u8 temp = 0;
+	//bit_status = GPIO_ReadInputPin(GPIOC, GPIO_PIN_6);
+	temp = GPIOC->IDR & GPIO_PIN_6;
+	//temp = bit_status & GPIO_PIN_6;
+	//if (bit_status != RESET)	//SET or RESET
+	if (temp != RESET)
 	{
 	   return D24V_INVALID;
 	}else
@@ -236,17 +249,17 @@ backup thinking:
 
 3-中断配置，模拟看门狗中断与转换结束中断。
 */
-void adc_init()
+void adc_init(void)
 {
 	ADC1_DeInit(); // 寄存器回复默认值
 	ADC1_PrescalerConfig(ADC1_PRESSEL_FCPU_D2);// 分频 fadc= fmaster/2 = 1/2/4MHZ
 	//选择触发源
 	//ADC采样速率，最大4MHZ,转换速率为3.5us
 	//IO配置，必须为浮空输入,关闭Smit触发器 - ADC_CSR
-ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL2, DISABLE);
-ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL3, DISABLE);
-ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL4, DISABLE);
-ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL5, DISABLE);	
+	ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL2, DISABLE);
+	ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL3, DISABLE);
+	ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL4, DISABLE);
+	ADC1_SchmittTriggerConfig(ADC1_SCHMITTTRIG_CHANNEL5, DISABLE);	
 	//对齐方式
 	ADC1_Cmd(ENABLE);
 }
@@ -258,18 +271,22 @@ des: adc read
 
 u16 adcSingleRead(ADC1_Channel_TypeDef channel)
 {
-	FlagStatus flag_status;
+	FlagStatus flag_status = 0;
+	u8 temp = 0;
 	u16 u16_adc1_value;
 	ADC1_ConversionConfig(ADC1_CONVERSIONMODE_SINGLE, channel, ADC1_ALIGN_RIGHT);		
 	ADC1_StartConversion();
 	flag_status = ADC1_GetFlagStatus(ADC1_FLAG_EOC);
 	delay_us(10);
-	if (flag_status == SET) // SET or RESET
+	temp = (u8)flag_status & channel;
+	//if (flag_status) // SET or RESET
+	if (temp)
 	{
 		u16_adc1_value = ADC1_GetConversionValue(); 
 		ADC1_ClearFlag(ADC1_FLAG_EOC);
 		return u16_adc1_value;
 	};
+    return 0;
 }
 /*
 fnc:
@@ -436,40 +453,42 @@ void iic_byts()
  *	Returns: None
  *	Description:   
  *******************************************************************************/
-u8 CODE[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
-enum
-{
-	SEG1 = 0x01,
-	SEG2 = 0x02,
-	SEG3 = 0x04,
-	SEG4 = 0x08,
-	SEG5 = 0x10,
-	SEG6 = 0x20,
-	SEG7 = 0x40,
-	SEG8 = 0x80,
-};
-#define G4_RED_ON 
-
-
+//u8 CODE[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
 void TM1650_Init(void)
 {
 
 	TM1650_Set(0x48,0x11); 
 
-	TM1650_Set(0x68,CODE[0]);
+	TM1650_Set(0x68,0x3f);
 
-	TM1650_Set(0x6A,CODE[0]);
+	TM1650_Set(0x6A,0x3f);
 
-	TM1650_Set(0x6C,CODE[0]);
+	TM1650_Set(0x6C,0x3f);
 
 	TM1650_Set(0x6E,0x00);
 
+}
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
+void timer_init()
+{
+	
 }
 
 
 //****************************************************************************
 // @Interrupt Vectors
 //****************************************************************************
+void timer_1ms(void)
+{
+	
+}
+
+
 
 /*
  *######################################################################

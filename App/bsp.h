@@ -111,6 +111,11 @@ extern void setChargeCtrlSta(CHARGE_CTRL_STA_E on_off);
 // for display
 extern 	void TM1650_Set(unsigned char add,unsigned char dat); // ˝¬Îπ‹œ‘ æ
 extern void  TM1650_Init(void);
+//adc
+extern u16 adcSingleRead(ADC1_Channel_TypeDef channel);
+extern u16 adcCcontinuousRead(ADC1_Channel_TypeDef channel);
+
+
 
 //****************************************************************************
 // @Interrupt Vectors

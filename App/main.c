@@ -39,8 +39,9 @@
 /* Private functions ---------------------------------------------------------*/
 
 
-
-
+extern void test_key_task();
+extern  void test_displayAd(void);
+u16 adval=0;
 
 void main(void)
 {
@@ -58,6 +59,10 @@ void main(void)
     //delay_us(1000);
    // TM1650_Init();
     delay_ms(100);
+    key_task();
+    test_key_task();
+    test_displayAd();
+    //adval = adcSingleRead(ADC1_CHANNEL_5);
     
    // setUSB2ALedSta(USB2A_LED_OFF);
 	//setUSB1ALedSta(USB1A_LED_OFF);

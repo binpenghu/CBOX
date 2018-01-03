@@ -43,7 +43,8 @@ typedef enum
 	BAT_ERR_LED_CMD,
 	FIX_RED_LED_CMD,
 	BAT_REV_LED_CMD,
-	PERCENT_LED_CMD,	
+	PERCENT_LED_CMD,
+	LED_ALL_CLOSED_CMD,
 	MAX_LED_CMD,
 }DISPLAY_LED_CMD_E;
 //****************************************************************************
