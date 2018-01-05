@@ -1943,6 +1943,12 @@
   <group>
     <name>App</name>
     <file>
+      <name>$PROJ_DIR$\App\adConvert.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\adConvert.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\App\bsp.c</name>
     </file>
     <file>
@@ -1959,6 +1965,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\App\key.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\Logic.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\Logic.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\App\main.c</name>

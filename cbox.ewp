@@ -257,9 +257,9 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
-          <state>F:\Project\chargeBoxForStm8s\Bsp\inc</state>
-          <state>F:\Project\chargeBoxForStm8s\App</state>
-          <state>F:\Project\chargeBoxForStm8s\test</state>
+          <state>$PROJ_DIR$\Bsp\inc</state>
+          <state>$PROJ_DIR$\App</state>
+          <state>$PROJ_DIR$\test</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -1595,6 +1595,12 @@
   <group>
     <name>App</name>
     <file>
+      <name>$PROJ_DIR$\App\adConvert.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\adConvert.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\App\bsp.c</name>
     </file>
     <file>
@@ -1611,6 +1617,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\App\key.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\Logic.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\App\Logic.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\App\main.c</name>

@@ -62,6 +62,7 @@ typedef enum
 //****************************************************************************
 // @Prototypes Of Global Functions
 //****************************************************************************
+extern void display_init(void);
 extern void dispaly_num(u16 num );
 extern void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off);
 extern void display_machineMode_led(u8 on_off);

@@ -92,6 +92,26 @@ REG_VAL_T regValBackup;
  *  Returns: None
  *  Description:   
  ******************************************************************************/
+const u8 initVal[] = {0x40,0x02};
+
+void display_init(void)
+{
+	TM1650_Set(DECADE_REG,initVal[0]);		
+	TM1650_Set(DIGITAL_REG,initVal[0]);	
+	TM1650_Set(POINT_REG,initVal[0]);	
+	TM1650_Set(OTHER_LED_REG,initVal[1]);
+}
+
+
+
+
+
+/******************************************************************************
+ *  Function:
+ *  Parameters: None
+ *  Returns: None
+ *  Description:   
+ ******************************************************************************/
 void dispaly_num(u16 num )
 {
 	u8 decade=0,digit=0,point=0;
