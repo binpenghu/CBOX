@@ -56,10 +56,10 @@ typedef enum
 
 typedef enum
 {
-	D5V_FROM_MIX=0,
+	D5V_FROM_BAT=0,
 	D5V_FROM_D24V=1,
 }D5V_RESOURCE_E;
-
+/*
 typedef enum
 {
 	USB2A_LED_OFF = 0,
@@ -77,13 +77,36 @@ typedef enum
 	CHARGE_OFF=0,
 	CHARGE_ON =1,
 }CHARGE_CTRL_STA_E;
-
-enum
+*/
+typedef enum
 {
-	ON = 1,
-	OFF = 0
-};
+	OFF = 0,
+	ON = 1,	
+}SW_E;
 
+
+typedef struct
+{
+	u16 cnt;
+	u8 period_10ms;
+	u8 period_20ms;
+	u8 period_50ms;
+	u8 period_100ms;
+	u8 period_200ms;
+	u8 period_500ms;
+	u8 period_1s;
+}SYS_TICK_T;
+
+
+
+typedef  void (*void_fptr) (void); 
+typedef struct
+{
+	u8 timerType;
+	u8 timRunningFlg;	
+	u16 cntOvf;
+	void_fptr pfnc;
+}TIMER_T;
 
 //****************************************************************************
 // @Imported Global Variables
@@ -105,9 +128,9 @@ extern KEY_STATUS_E getKeySwSta(void);
 extern BAT_CONNECT_DIR_STA_E getBatConnectSta(void);
 extern D24V_CONNECT_STA_E getD24Sta(void);
 extern void set5VResource(D5V_RESOURCE_E res);
-extern void setUSB2ALedSta(USB2A_LED_E sta);
-extern void setUSB1ALedSta(USB1A_LED_E sta);
-extern void setChargeCtrlSta(CHARGE_CTRL_STA_E on_off);
+extern void setUSB2ALedSta(SW_E on_off);
+extern void setUSB1ALedSta(SW_E on_off);
+extern void setChargeCtrlSta(SW_E on_off);
 // for display
 extern 	void TM1650_Set(unsigned char add,unsigned char dat); // ˝¬Îπ‹œ‘ æ
 extern void  TM1650_Init(void);
@@ -115,8 +138,13 @@ extern void  TM1650_Init(void);
 extern u16 adcSingleRead(ADC1_Channel_TypeDef channel);
 extern u16 adcCcontinuousRead(ADC1_Channel_TypeDef channel);
 
+extern void tim1_init(void);
+extern void tim4_init(void);
 
+extern void TIM4Start(u16 mstime,void_fptr fnc);
 
+extern void iwdg_init(void);
+extern void feedDog(void);
 //****************************************************************************
 // @Interrupt Vectors
 //****************************************************************************

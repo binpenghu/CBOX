@@ -31,17 +31,31 @@
 //****************************************************************************
 // @Defines
 //****************************************************************************
+#define V_BACK_CHN   ADC1_CHANNEL_5
+#define V_IN_CHN 	 ADC1_CHANNEL_2
+#define I_BACK_CHN	 ADC1_CHANNEL_3
+#define I_USB_CHN    ADC1_CHANNEL_4
+#define BUF_LENTH  8
 
 //****************************************************************************
 // @Typedefs
 //****************************************************************************
- typedef struct 
+typedef struct
 {
-	u16 bat_adval;
-	u16 usb_adval;
-	u16 bat_charge_adval;
-	u16 in_adval;
-}AD_IPNUT_T;
+	u8 bufSta;
+	u8 bufCnt;
+	u16 total;
+	u16 avg;
+}BUF_STA_T;
+typedef enum
+{
+	V_BACK_STEP=0,
+	V_IN_STEP,
+	I_BACK_STEP,
+	I_USB_STEP,
+	MAX_STEP
+}AD_STEP_T;
+
 //****************************************************************************
 // @Imported Global Variables
 //****************************************************************************
@@ -49,7 +63,15 @@
 //****************************************************************************
 // @Global Variables
 //****************************************************************************
-extern AD_IPNUT_T adInputData;
+extern u16 vBatBuf[BUF_LENTH];
+extern u16 vInBuf[BUF_LENTH];
+extern u16 iBatBuf[BUF_LENTH];
+extern u16 iUsbBuf[BUF_LENTH];
+extern BUF_STA_T vBatBufSta;
+extern BUF_STA_T vInBufSta;
+extern BUF_STA_T iBatBufSta;
+extern BUF_STA_T iUsbBufSta;
+
 //****************************************************************************
 // @Prototypes Of Static Functions
 //****************************************************************************
@@ -57,7 +79,14 @@ extern AD_IPNUT_T adInputData;
 //****************************************************************************
 // @Prototypes Of Global Functions
 //****************************************************************************
-extern void adDetectTask(void);
+extern u16 vBackConvert(u16 adval);
+extern u16 vInConvert(u16 adval);
+extern u16 iBackConvert(u16 adval);
+extern u16 iUsbConvert(u16 adval);
+extern u8 buffer(u16 *buf,BUF_STA_T *bufsta,u16 inVal);
+
+
+//extern void adDetectTask(void);
 //****************************************************************************
 // @Interrupt Vectors
 //****************************************************************************

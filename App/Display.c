@@ -38,7 +38,8 @@
 // @Imported Global Variables
 //****************************************************************************
 static u8 Number[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f}; //0-9
-
+const u8 initVal[] = {0x40,0x02};
+//const u8 G1_OFF = 0x
 typedef enum
 {
 	DECADE_REG = 0x68,
@@ -73,15 +74,15 @@ typedef enum
 
 typedef struct
 {
-	u8 decade_regval;
-	u8 digital_regval;
-	u8 point_regval;
-	u8 led_regval;
+	u8 G1;
+	//u8 digital_regval;
+	u8 G3;
+	//u8 led_regval;
 }REG_VAL_T;
 //****************************************************************************
 // @Global Variables
 //****************************************************************************
-REG_VAL_T regValBackup;
+REG_VAL_T regValBackup = {0x00,0x00};
 
 //****************************************************************************
 // @Prototypes Of Static Functions
@@ -92,38 +93,43 @@ REG_VAL_T regValBackup;
  *  Returns: None
  *  Description:   
  ******************************************************************************/
-const u8 initVal[] = {0x40,0x02};
 
-void display_init(void)
+void display_default(void)
 {
 	TM1650_Set(DECADE_REG,initVal[0]);		
 	TM1650_Set(DIGITAL_REG,initVal[0]);	
 	TM1650_Set(POINT_REG,initVal[0]);	
-	TM1650_Set(OTHER_LED_REG,initVal[1]);
+	//TM1650_Set(OTHER_LED_REG,initVal[1]);
+	display_led(V_LED_CMD,ON);
 }
-
-
-
-
+/******************************************************************************
+ *  Function:
+ *  Parameters: None
+ *  Returns: None
+ *  Description:  
+ ******************************************************************************/
+ 
 
 /******************************************************************************
  *  Function:
  *  Parameters: None
  *  Returns: None
- *  Description:   
+ *  Description:   若电压小于10V，decade不显示，
  ******************************************************************************/
-void dispaly_num(u16 num )
+void display_num(u16 num)
 {
 	u8 decade=0,digit=0,point=0;
 	if (num < 10) // only point
 	{
-		decade=Number[0];
+		//decade=Number[0];
+		decade = 0x80 & regValBackup.G1; // 不显示数字
 		digit=Number[0];
 		point=Number[num];
+		digit |= DIGITAL_POINT;
 		
 	}else if (num<100)
 	{
-		decade=Number[0];
+		decade=  0x80 & regValBackup.G1;// 不显示数字
 		digit = Number[num/10];
 		point = Number[num%10];
 		digit |= DIGITAL_POINT;
@@ -135,13 +141,23 @@ void dispaly_num(u16 num )
 		point = Number[(num%100)%10];	
 		digit |= DIGITAL_POINT;
 	}
+	else if (num < 10000)
+	{
+		decade = Number[num/1000];
+		digit = Number[(num%1000)/100];
+		point = Number[(num%1000)%100];			
+	}
+	else
+	{
+		return;
+	}
 
 	TM1650_Set(DECADE_REG,decade);		
 	TM1650_Set(DIGITAL_REG,digit);	
 	TM1650_Set(POINT_REG,point);	
-	regValBackup.decade_regval = decade;
-	regValBackup.digital_regval = digit;
-	regValBackup.point_regval = point;
+	regValBackup.G1 = decade;
+	//regValBackup.digital_regval = digit;
+	regValBackup.G3 = point;
 }
 /******************************************************************************
  *  Function:
@@ -152,7 +168,6 @@ void dispaly_num(u16 num )
 void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off)
 {
 	static u8 ledVal = 0;
-	u8 temp=0;
 	if (ledCmd >= MAX_LED_CMD)
 	{
 		return;
@@ -161,12 +176,14 @@ void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off)
 	{
 		if (on_off == ON)
 		{
-			ledVal |= 0x1<<ledCmd;
-			ledVal |= ledCmd;
+            ledVal |= 0x1<<ledCmd;
+			//temp |= 0x1<<ledCmd;
+			//ledVal |= temp;
 		}else if (on_off == OFF)
 		{
-			temp = ~(0x1<<ledCmd);
-			ledVal &= temp;
+			//temp &= ~(0x1<<ledCmd);
+			//ledVal &= temp;
+            ledVal &= ~(0x1<<ledCmd);
 		}	
 
 	}else if (ledCmd == LED_ALL_CLOSED_CMD)
@@ -177,7 +194,7 @@ void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off)
 			ledVal = 0x0;
 	}
 	TM1650_Set(OTHER_LED_REG,ledVal);	
-	regValBackup.led_regval = ledVal;
+	//regValBackup.led_regval = ledVal;
 }
 /******************************************************************************
  *  Function:
@@ -188,17 +205,17 @@ void display_led(DISPLAY_LED_CMD_E ledCmd,u8 on_off)
 void display_machineMode_led(u8 on_off)
 {
 	u8 temp = 0;
-	temp = regValBackup.decade_regval;
 	if (on_off == ON)
 	{
-		temp |= MACHINE_ERR_LED;
+		temp = MACHINE_ERR_LED |regValBackup.G1;
 		TM1650_Set(MACHINDE_MODE_REG,temp);	
 	}
 	else
 	{
-		temp &= (~MACHINE_ERR_LED);
+		temp = (~MACHINE_ERR_LED)&regValBackup.G1;
 		TM1650_Set(MACHINDE_MODE_REG,temp);	
 	}
+	regValBackup.G1 = temp;
 }
 
 /******************************************************************************
@@ -210,17 +227,18 @@ void display_machineMode_led(u8 on_off)
 void display_chargeFinish_led(u8 on_off)
 {
 	u8 temp = 0;
-	temp = regValBackup.point_regval;
+	
 	if (on_off == ON)
 	{
-		temp |= CHARGE_FINISH_LED;
+		temp = CHARGE_FINISH_LED | regValBackup.G3;
 		TM1650_Set(CHARGE_FINISH_REG,temp); 
 	}
 	else
 	{
-		temp &= (~CHARGE_FINISH_LED);
+		temp = (~CHARGE_FINISH_LED) & regValBackup.G3;
 		TM1650_Set(CHARGE_FINISH_REG,temp); 
 	}
+	regValBackup.G3 = temp;
 }
 
 //****************************************************************************

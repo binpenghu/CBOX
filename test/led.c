@@ -38,3 +38,8 @@ void LED_ON(void)
 {
     LEDPort->ODR |= LEDPin;//LEDÖÃ¸ß
 }
+
+void LED_TRI(void)
+{
+   LEDPort->ODR ^= LEDPin;
+}

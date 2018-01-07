@@ -11,6 +11,6 @@
 extern void LED_Init(void);
 extern void LED_ON(void);
 extern void LED_OFF(void);
-
+extern void LED_TRI(void);
 
 #endif

@@ -44,6 +44,7 @@
 //****************************************************************************
 // @Global Variables
 //****************************************************************************
+TIMER_T tim;
 
 //****************************************************************************
 // @Prototypes Of Static Functions
@@ -66,6 +67,8 @@ void sysInit(void)
     //默认启动为HSI RC 8分频时钟，即16MHZ/1=16MHZ 
   //CLK_DeInit();
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
+  while(!(CLK->ICKR & CLK_ICKR_HSIRDY));
+ 
   /*CLK_SYSCLKConfig(CLK_PRESCALER_HSIDIV1);
   ErrorStatus clk_return_status;
   clk_return_status = CLK_ClockSwitchConfig(CLK_SWITCHMODE_AUTO, CLK_SOURCE_HSI, DISABLE, CLK_CURRENTCLOCKSTATE_DISABLE);
@@ -114,12 +117,13 @@ void sysInit(void)
  *******************************************************************************/
 KEY_STATUS_E getKeySwSta(void)
 {
-	 //BitStatus bit_status;
+	//BitStatus bit_status;
 	 u8 temp = 0;
 	 //bit_status = GPIO_ReadInputPin(GPIOA, GPIO_PIN_3);
-	 //temp = bit_status & GPIO_PIN_3;
+	//temp = bit_status & GPIO_PIN_3;
 	 temp = GPIOA->IDR & GPIO_PIN_3;
-	 if (temp  != RESET)  //SET or RESET
+	 //if (temp  != RESET)  //SET or RESET
+     if (temp)
 	 {
 		return KEY_RELEASE;
 		
@@ -195,9 +199,9 @@ void set5VResource(D5V_RESOURCE_E res)
  *	Returns: None
  *	Description:   
  *******************************************************************************/
-void setUSB2ALedSta(USB2A_LED_E sta)
+void setUSB2ALedSta(SW_E on_off)
 {
-	if (sta == USB2A_LED_ON)
+	if (on_off == ON)
 		GPIO_WriteLow(GPIOD, GPIO_PIN_4);
 	else
 		GPIO_WriteHigh(GPIOD, GPIO_PIN_4);
@@ -210,9 +214,9 @@ void setUSB2ALedSta(USB2A_LED_E sta)
  *	Returns: None
  *	Description:   
  *******************************************************************************/
-void setUSB1ALedSta(USB1A_LED_E sta)
+void setUSB1ALedSta(SW_E on_off)
 {
-	if (sta == USB1A_LED_ON)
+	if (on_off == ON)
 		GPIO_WriteLow(GPIOC, GPIO_PIN_7);
 	else
 		GPIO_WriteHigh(GPIOC, GPIO_PIN_7);
@@ -225,9 +229,9 @@ void setUSB1ALedSta(USB1A_LED_E sta)
  *	Returns: None
  *	Description:   
  *******************************************************************************/
-void setChargeCtrlSta(CHARGE_CTRL_STA_E on_off)
+void setChargeCtrlSta(SW_E on_off)
 {
-	if(on_off == CHARGE_ON)
+	if(on_off == ON)
 	{
 		GPIO_WriteHigh(GPIOC, GPIO_PIN_3);
 	}else
@@ -271,16 +275,16 @@ des: adc read
 
 u16 adcSingleRead(ADC1_Channel_TypeDef channel)
 {
-	FlagStatus flag_status = 0;
-	u8 temp = 0;
+	u8 flag_status = 0;
+	//u8 temp = 0;
 	u16 u16_adc1_value;
 	ADC1_ConversionConfig(ADC1_CONVERSIONMODE_SINGLE, channel, ADC1_ALIGN_RIGHT);		
-	ADC1_StartConversion();
+	ADC1_StartConversion();	
 	flag_status = ADC1_GetFlagStatus(ADC1_FLAG_EOC);
 	delay_us(10);
-	temp = (u8)flag_status & channel;
-	//if (flag_status) // SET or RESET
-	if (temp)
+	//temp = (u8)flag_status & channel;
+	if (flag_status&0x80) // SET or RESET
+	//if (temp)
 	{
 		u16_adc1_value = ADC1_GetConversionValue(); 
 		ADC1_ClearFlag(ADC1_FLAG_EOC);
@@ -410,7 +414,7 @@ unsigned char TM_r_key(void)
 	//TM_ask();
 	TM_Stop();
 	return(rekey);
-	}
+}
 
 /*
 
@@ -472,20 +476,126 @@ void TM1650_Init(void)
  *	Function:
  *	Parameters: None
  *	Returns: None
+ *	Description:   sysclk = 16mhz ,  timerclk =16/16000 = 1khz.
+ fCK_CNT = fCK_PSC / (PSCR[15:0] + 1)
+ PSCR +1 = 16000=> PSCR = 15999;
+ *******************************************************************************/
+void tim1_init(void)
+{
+	TIM1_TimeBaseInit(128, TIM1_COUNTERMODE_UP, 4, 24);
+    TIM1_ITConfig(TIM1_IT_UPDATE, ENABLE);
+    TIM1_ARRPreloadConfig(ENABLE);
+    TIM1_SetCounter(0);
+	TIM1_Cmd(ENABLE);
+}
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
  *	Description:   
  *******************************************************************************/
-void timer_init()
+
+void tim4_init(void)
 {
-	
+	TIM4_TimeBaseInit(TIM4_PRESCALER_128, 125-1);  //定时1ms (16M/128/125 = 1000)
+	TIM4_ClearFlag(TIM4_FLAG_UPDATE);			   //清除标志位
+	TIM4_ITConfig(TIM4_IT_UPDATE, ENABLE);		   //使能更新UPDATE中断  
+    TIM4_SetCounter(0);                            //计数值归零
+    TIM4_Cmd(DISABLE);  
+    
 }
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
 
+void TIM4Start(u16 mstime,void_fptr fnc)
+{
+  if (tim.timRunningFlg == 0)
+  {
+  	tim.timRunningFlg = 1;
+  	tim.cntOvf = mstime;
+  	tim.pfnc = fnc;
+    TIM4_SetCounter(0);                            //计数值归零
+    TIM4_Cmd(ENABLE);                              //启动定时器
+  }
+}
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
 
+void TIM4Stop(void)
+{
+  if (tim.timRunningFlg==1)
+  {
+	  TIM4_SetCounter(0);
+	  tim.timRunningFlg=0;
+	  TIM4_Cmd(DISABLE);							 //关闭定时器
+  }
+}
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
+void iwdg_init(void)
+{
+	IWDG_Enable();
+	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+	IWDG_SetPrescaler(IWDG_Prescaler_32);
+	IWDG_SetReload(250);
+	IWDG_ReloadCounter();
+}
+ /*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
+void feedDog(void)
+{
+	IWDG_ReloadCounter();
+}
 //****************************************************************************
 // @Interrupt Vectors
 //****************************************************************************
-void timer_1ms(void)
+extern void LED_TRI(void);
+/*******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ *******************************************************************************/
+
+void tim4_vector(void)
 {
-	
+	static u16 tick=0;
+	static u16 secCnt=0;
+	TIM4_ClearITPendingBit(TIM4_IT_UPDATE); 	   //清除中断标志
+	tick++;
+	if (tick %1000 == 0)
+	{
+		tick = 0;
+		secCnt++;
+		if (secCnt>=tim.cntOvf)
+		{
+			tim.pfnc();
+			TIM4Stop();
+			secCnt=0;
+		}
+	}
+	/*
+	if (tick >= tim.cntOvf)
+	{
+		//LED_TRI();
+		//TIM4Start(500,LED_TRI);
+	}*/
 }
 
 

@@ -30,6 +30,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm8s_it.h"
 
+extern void tim1_vector(void);
+extern void tim4_vector(void);
 /** @addtogroup Template_Project
   * @{
   */
@@ -229,6 +231,7 @@ INTERRUPT_HANDLER(TIM1_UPD_OVF_TRG_BRK_IRQHandler, 11)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */
+  tim1_vector();
 }
 
 /**
@@ -489,6 +492,7 @@ INTERRUPT_HANDLER(TIM6_UPD_OVF_TRG_IRQHandler, 23)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */
+  tim4_vector();
  }
 #endif /* (STM8S903) || (STM8AF622x)*/
 

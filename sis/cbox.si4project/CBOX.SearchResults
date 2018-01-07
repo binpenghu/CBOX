@@ -1,0 +1,9 @@
+---- key_task Matches (3 in 2 files) ----
+key.c (F:\Project\chargeBoxForStm8s\App) line 95 : void key_task(KEY_VALUE_E *key)
+key.h (F:\Project\chargeBoxForStm8s\App) line 62 : //extern KEY_VALUE_E key_task(void);
+key.h (F:\Project\chargeBoxForStm8s\App) line 63 : extern void key_task(KEY_VALUE_E *key)
+---- key_task Matches (4 in 3 files) ----
+key.c (F:\Project\chargeBoxForStm8s\App) line 95 : void key_task(KEY_VALUE_E *key)
+key.h (F:\Project\chargeBoxForStm8s\App) line 62 : //extern KEY_VALUE_E key_task(void);
+key.h (F:\Project\chargeBoxForStm8s\App) line 63 : extern void key_task(KEY_VALUE_E *key)
+logicTask in Logic.c (F:\Project\chargeBoxForStm8s\App) : 		keySta = key_task();

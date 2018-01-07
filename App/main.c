@@ -34,6 +34,8 @@
 #include "delay.h"
 #include "display.h"
 #include "key.h"
+#include "logic.h"
+#include "adConvert.h"
 /* Private defines -----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -41,37 +43,52 @@
 
 extern void test_key_task();
 extern  void test_displayAd(void);
-u16 adval=0;
+u16 temp=0;
+SYS_TICK_T sysTick={0,0,0,0,0,0,0,0};
 
 void main(void)
 {
+  disableInterrupts();
+  iwdg_init();
   sysInit();
   TM1650_Init();
-  //LED_Init();
+  tim4_init();  
+  logic_init();
+  tim1_init();
+  enableInterrupts();
+  //M4Start(500, LED_TRI);// for test
   /* Infinite loop */
   while (1)
   {
-  	
-    //setUSB2ALedSta(USB2A_LED_ON);
-	//setUSB1ALedSta(USB1A_LED_ON);
-	//set5VResource(D5V_FROM_D24V);
-	//setChargeCtrlSta(CHARGE_ON);
-    //delay_us(1000);
-   // TM1650_Init();
-    delay_ms(100);
-    key_task();
-    test_key_task();
-    test_displayAd();
-    //adval = adcSingleRead(ADC1_CHANNEL_5);
-    
-   // setUSB2ALedSta(USB2A_LED_OFF);
-	//setUSB1ALedSta(USB1A_LED_OFF);
-	//set5VResource(D5V_FROM_MIX);
-	//setChargeCtrlSta(CHARGE_OFF);	
-    //delay_us(1000);   
-   // delay_ms(1);
+
+  	if (sysTick.period_20ms)
+  	{
+  		sysTick.period_20ms=0;
+		adDetectTask();
+		feedDog();
+  	}
+  	if (sysTick.period_100ms)
+  	{
+  		sysTick.period_100ms=0;
+  		// add user task
+  		keyDetTask();
+  	}
+  	if (sysTick.period_500ms)
+  	{
+		sysTick.period_500ms=0;
+		logicTask();
+  	}
+  	if (sysTick.period_1s)
+  	{
+  		sysTick.period_1s=0;
+  		//temp++;
+  		//if (temp %2 == 0)
+  		//	setChargeCtrlSta(OFF);
+  		//else
+  		//	setChargeCtrlSta(ON); 
+  		//LED_TRI();
+  	}
   }
-  
 }
 
 
@@ -120,6 +137,51 @@ void assert_failed(u8* file, u32 line)
   }
 }
 #endif
+//****************************************************************************
+// @Interrupt Vectors
+//****************************************************************************
+void tim1_vector(void)
+{
+	TIM1_ClearITPendingBit(TIM1_IT_UPDATE);
+	sysTick.cnt++;
+	if(sysTick.cnt%10==0)
+	{
+		sysTick.period_10ms=1;
+	}
+	if (sysTick.cnt%20==0)
+	{
+		sysTick.period_20ms=1;
+	}
+	if (sysTick.cnt%50==0)
+	{
+		sysTick.period_50ms=1;
+	}
+	if (sysTick.cnt%100==0)
+	{
+		sysTick.period_100ms=1;
+	}
+	if (sysTick.cnt%200==0)
+	{
+		sysTick.period_200ms=1;
+	}
+	if (sysTick.cnt%500==0)
+	{
+		sysTick.period_500ms=1;
+	}
+	if (sysTick.cnt%1000==0)
+	{
+		sysTick.period_1s=1;
+		sysTick.cnt=0;
+	}
+	/*
+	if(sysTick.cnt>=65535)
+	{
+		sysTick.cnt++;
+		//temp = sysTick.cnt;		
+	}*/
+	//sysTick.cnt = sysTick.cnt>=65535?0: sysTick.cnt++;
+}
+
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

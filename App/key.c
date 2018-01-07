@@ -21,6 +21,7 @@
 //****************************************************************************
 // @Project Includes
 //****************************************************************************
+#include "key.h"
 #include "bsp.h"
 #include "delay.h"
 //****************************************************************************
@@ -34,19 +35,11 @@
 //****************************************************************************
 // @Typedefs
 //****************************************************************************
-typedef enum
+enum
 {
-	V_KEY = 1,
-	A_KEY = 2,
-	AH_KEY = 3,
-	PER_KEY = 4,
-	MAX_KEY =5
-}KEY_VALUE_E;
-
-KEY_VALUE_E keyVal;
-
-
-
+	KEY_VALID=0,
+	KEY_INVALID=1
+};
 //****************************************************************************
 // @Imported Global Variables
 //****************************************************************************
@@ -67,7 +60,8 @@ extern u8 keyValTest;
  *  Function:
  *  Parameters: None
  *  Returns: None
- *  Description:   
+ 		
+ *  Description:   detest press valid.
  ******************************************************************************/
 u8 getKeyStatus(void)
 {
@@ -78,13 +72,13 @@ u8 getKeyStatus(void)
 		if (KEY_PRESS == getKeySwSta())
 		{
 			longPressFlag=1;
-			return 1;
+			return KEY_VALID;
 		}
-	}else if (KEY_RELEASE == getKeySwSta())
+	}else if (KEY_RELEASE == getKeySwSta() )
 	{
 		longPressFlag=0;
 	}
-	return 0;
+	return KEY_INVALID;
 }
 
 /******************************************************************************
@@ -93,13 +87,16 @@ u8 getKeyStatus(void)
  *  Returns: None
  *  Description:   
  ******************************************************************************/
-void key_task(void)
+void key_task(KEY_VALUE_E *key)
 {
-	if ( 0!=getKeyStatus())
+	//static KEY_VALUE_E keyVal = V_KEY;
+	if (KEY_VALID == getKeyStatus())
 	{
-		keyVal = keyVal<MAX_KEY?keyVal++:V_KEY;	
-		keyValTest++;
-		//call display
+		//keyVal = keyVal<MAX_KEY?keyVal++:V_KEY;
+        if (++(*key) >= MAX_KEY)
+        {
+           (*key) = V_KEY;
+        }
 	}
 }
 /******************************************************************************

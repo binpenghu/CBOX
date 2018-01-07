@@ -29,23 +29,11 @@
 //****************************************************************************
 // @Defines
 //****************************************************************************
-#define V_BACK_CHN   ADC1_CHANNEL_5
-#define V_IN_CHN 	 ADC1_CHANNEL_2
-#define I_BACK_CHN	 ADC1_CHANNEL_3
-#define I_USB_CHN    ADC1_CHANNEL_4
+
 //****************************************************************************
 // @Typedefs
 //****************************************************************************
 
-
-typedef enum
-{
-	V_BACK_STEP=0,
-	V_IN_STEP,
-	I_BACK_STEP,
-	I_USB_STEP,
-	MAX_STEP
-}AD_STEP_T;
 
 
 
@@ -62,7 +50,7 @@ const float chargeUsbCurOffset = 0.025;   //unit 0.1A
 const float batterVoltOffset = 0.7; 	  //unit 0.1V
 const float inVoltOffset = 0.7; 	  	  //unit 0.1V
 
-AD_IPNUT_T adInputData = {0};
+//AD_IPNUT_T adInputData = {0};
 
 
 //****************************************************************************
@@ -72,6 +60,56 @@ AD_IPNUT_T adInputData = {0};
 //****************************************************************************
 // @Prototypes Of Global Functions
 //****************************************************************************
+/******************************************************************************
+ *  Function:
+ *  Parameters: None
+ *  Returns: None
+ *  Description:   
+ ******************************************************************************/
+
+/******************************************************************************
+ *	Function:
+ *	Parameters: None
+ *	Returns: None
+ *	Description:   
+ ******************************************************************************/
+
+u16 vBatBuf[BUF_LENTH];
+u16 vInBuf[BUF_LENTH];
+u16 iBatBuf[BUF_LENTH];
+u16 iUsbBuf[BUF_LENTH];
+BUF_STA_T vBatBufSta = {0,0,0,0};
+BUF_STA_T vInBufSta = {0,0,0,0};
+BUF_STA_T iBatBufSta = {0,0,0,0};
+BUF_STA_T iUsbBufSta = {0,0,0,0};
+
+
+u8 buffer(u16 *buf,BUF_STA_T *bufsta,u16 inVal)
+{
+	u8 j=0;
+    u8 rtn=1;
+	buf[bufsta->bufCnt] = inVal; 
+	if (bufsta->bufCnt==BUF_LENTH-1 || bufsta->bufSta == 1)
+	{
+		for (j=0;j<BUF_LENTH;j++)
+		{
+			bufsta->total += buf[j];
+		}
+		bufsta->avg = bufsta->total/BUF_LENTH;
+		//bufsta->avg = bufsta.total<<2;
+        bufsta->total = 0;
+		bufsta->bufSta =1;
+		rtn= 0;
+	}
+	//bufsta->bufCnt = bufsta->bufCnt<BUF_LENTH?bufsta->bufCnt++:0;
+	if (++bufsta->bufCnt >= BUF_LENTH)
+	{
+		bufsta->bufCnt =0;
+	}
+	return rtn;
+}
+ 
+
 /******************************************************************************
  *  Function:
  *  Parameters: None
@@ -112,43 +150,9 @@ u16 iUsbConvert(u16 adval)
  *  Parameters: None
  *  Returns: None
  *  Description:  four channels ad convert. each 25ms period, 
- 
  ******************************************************************************/
-void adDetectTask(void)
-{
-	static AD_STEP_T step =V_BACK_STEP;
-	u16 temp=0;
-	switch (step)
-	{
-		case V_BACK_STEP:
-			temp = adcSingleRead(V_BACK_CHN); 
-			adInputData.bat_adval = vBackConvert(temp);
-			step++;
-			break;
-		case V_IN_STEP:
-			temp = adcSingleRead(V_IN_CHN); 
-			adInputData.in_adval = vInConvert(temp);
-			step++;
-			break;
-		case I_BACK_STEP:
-			temp = adcSingleRead(I_BACK_CHN);
-			adInputData.bat_charge_adval = iBackConvert(temp);
-			step++;
-			break;
-		case I_USB_STEP:
-			temp = adcSingleRead(I_USB_CHN);
-			adInputData.usb_adval = iUsbConvert(temp);
-			step=V_BACK_STEP;
-			break;
-		default:
-			step=V_BACK_STEP;
-			break;
-	}
-}
 
-
-
-
+ 
 //****************************************************************************
 // @Interrupt Vectors
 //****************************************************************************

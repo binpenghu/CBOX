@@ -67,10 +67,10 @@ u8 test_part = 2;
 	if (temp <=10)
 	{
 		test_part=1;
-		dispaly_num(temp);
+		display_num(temp);
 	}else if (temp <=12)
 	{
-		dispaly_num(100+temp);
+		display_num(100+temp);
 	}else if (temp <= 13)
 	{
 		display_machineMode_led(ON);
@@ -81,7 +81,7 @@ u8 test_part = 2;
 		display_chargeFinish_led(ON);
 	}else if (temp <= 22)
 	{
-		display_led((temp-15),ON);
+		//display_led((temp-15),ON);
 	}else
 	{
 		display_machineMode_led(OFF);
@@ -106,8 +106,8 @@ u8 test_part = 2;
 	if (test_part == 2)
 	{
 		adval = adcSingleRead(ADC1_CHANNEL_5);
-		bat_val = adval*0.7;
-		dispaly_num(bat_val);
+		bat_val = (u16)(adval*0.7);
+		display_num(bat_val);
         delay_ms(400);
 	}
 
